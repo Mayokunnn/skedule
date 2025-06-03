@@ -1,13 +1,13 @@
-"use client"
+"use client";
 
-import { z } from "zod"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 
-import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Input } from "@/components/ui/input"
-import { LockIcon, MailIcon } from "lucide-react"
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { LockIcon, MailIcon } from "lucide-react";
 
 import {
   Form,
@@ -15,12 +15,16 @@ import {
   FormField,
   FormItem,
   FormMessage,
-} from "@/components/ui/form"
+} from "@/components/ui/form";
+import { useLoginMutation } from "@/api/auth";
+import { useRouter } from "next/navigation";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }),
-  password: z.string().min(6, { message: "Password must be at least 6 characters" }),
-})
+  password: z
+    .string()
+    .min(6, { message: "Password must be at least 6 characters" }),
+});
 
 export default function SignIn() {
   const form = useForm({
@@ -29,12 +33,33 @@ export default function SignIn() {
       email: "",
       password: "",
     },
-  })
+  });
+
+  const router = useRouter();
+
+  const {
+    mutate: login,
+    isPending: isLoginPending,
+    error: loginError,
+  } = useLoginMutation();
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
-    console.log("Form submitted:", values)
-    // Add your login logic here
-  }
+    login(
+      {
+        email: values.email,
+        password: values.password,
+      },
+      {
+        onSuccess: (loginData) => {
+          console.log(loginData.message);
+          router.push("/dashboard"); 
+        },
+        onError: (error) => {
+          console.error(error.message);
+        },
+      }
+    );
+  };
 
   return (
     <div className="bg-black max-w-7xl w-full relative flex items-center justify-center text-white min-h-screen px-4">
@@ -42,10 +67,15 @@ export default function SignIn() {
         <h1 className="text-[#395B64] text-4xl">Skedule.</h1>
       </div>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-6 items-center w-full">
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="flex flex-col gap-6 items-center w-full"
+        >
           <div className="flex flex-col items-center justify-center gap-4">
             <h2 className="font-semibold text-4xl">Welcome Back!</h2>
-            <h4 className="text-xl">Please sign in to your account and get started</h4>
+            <h4 className="text-xl">
+              Please sign in to your account and get started
+            </h4>
           </div>
           <div className="flex flex-col gap-6 items-center w-full">
             {/* Email Field */}
@@ -101,19 +131,27 @@ export default function SignIn() {
                   Remember me
                 </label>
               </div>
-              <p className="text-gray-200 cursor-pointer hover:underline">Forgot Password?</p>
+              <p className="text-gray-200 cursor-pointer hover:underline">
+                Forgot Password?
+              </p>
             </div>
+
+            {loginError && (
+              <p className="text-red-500 text-sm w-full max-w-sm">
+                {loginError?.message}
+              </p>
+            )}
 
             <Button
               type="submit"
               size="lg"
               className="rounded-full h-12 bg-[#395B64] text-white w-full p-3 max-w-sm text-lg cursor-pointer hover:bg-[#2f4d56]"
             >
-              Sign In
+              {isLoginPending ? "Signing In..." : "Sign In"}
             </Button>
           </div>
         </form>
       </Form>
     </div>
-  )
+  );
 }
