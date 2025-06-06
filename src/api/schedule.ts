@@ -282,20 +282,14 @@ export const useAssignSingleScheduleMutation = () => {
   })
 }
 
-export const useCompareSchedulesMutation = () => {
-  const queryClient = useQueryClient()
-  return useMutation<CompareResponse, Error, DateRange>({
-    mutationFn: compareSchedules,
-    onError: (error) => {
-      console.error("Compare Schedules error:", error.message)
-    },
-    onSuccess: (data) => {
-      console.log("Schedules compared:", data)
-      queryClient.invalidateQueries({ queryKey: ["allSchedules"] })
-      queryClient.invalidateQueries({ queryKey: ["mySchedules"] })
-    },
-  })
-}
+export const useCompareSchedulesQuery = (dateRange: DateRange | null) => {
+  return useQuery({
+    queryKey: ["compareSchedules", dateRange?.weekStart],
+    queryFn: () => compareSchedules(dateRange!),
+    
+    enabled: !!dateRange,
+  });
+};
 
 export const useGetAllSchedulesQuery = (weekStart?: string) => {
   return useQuery<Schedule[], Error>({
