@@ -279,7 +279,7 @@ export function ScheduleDataTable({ dateRange }: ScheduleDataTableProps) {
               >
                 Pay Edge
               </div>
-            ) : (
+            ) : user.role !== "ADMIN" ? "" : (
               <button
                 className="w-6 h-6 flex items-center cursor-pointer justify-center rounded-sm border-2 hover:bg-gray-100"
                 onClick={() => {
