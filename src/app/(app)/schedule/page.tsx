@@ -27,6 +27,16 @@ export default function Schedule() {
   })
   const queryClient = useQueryClient()
 
+  let user = null;
+try {
+  const userData = localStorage.getItem("userData");
+  if (userData) {
+    user = JSON.parse(userData);
+  }
+} catch (error) {
+  console.error("Failed to parse userData from localStorage:", error);
+  localStorage.removeItem("userData"); // Optional: Clear invalid data
+}
 
   const handlePublish = () => {
     console.log("Publishing schedule...")
@@ -63,7 +73,7 @@ export default function Schedule() {
             />
             <div className="w-full flex justify-end gap-2">
               <ScheduleDialog dateRange={dateRange} onConfirm={handleSkeduleConfirm}>
-                <Button className="bg-[#395B64] text-white rounded-md px-4 py-2 cursor-pointer">
+                <Button disabled={user.role !== "ADMIN"} className="bg-[#395B64] text-white rounded-md px-4 py-2 cursor-pointer">
                   Skedule
                 </Button>
               </ScheduleDialog>

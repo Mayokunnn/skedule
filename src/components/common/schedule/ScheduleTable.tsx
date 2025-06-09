@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import * as React from "react"
+import * as React from "react";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -12,8 +12,8 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
-} from "@tanstack/react-table"
-import { Input } from "@/components/ui/input"
+} from "@tanstack/react-table";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -21,8 +21,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+} from "@/components/ui/table";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Dialog,
   DialogContent,
@@ -30,37 +30,37 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { DateRange } from "react-day-picker"
-import { format, isSameDay, startOfDay } from "date-fns"
-import { toZonedTime } from "date-fns-tz"
-import { useAssignSingleScheduleMutation } from "@/api/schedule"
-import { useGetAllEmployeesQuery } from "@/api/user"
-import { Plus } from "lucide-react"
-import { Button } from "@/components/ui/button"
+} from "@/components/ui/dialog";
+import { DateRange } from "react-day-picker";
+import { format, isSameDay, startOfDay } from "date-fns";
+import { toZonedTime } from "date-fns-tz";
+import { useAssignSingleScheduleMutation } from "@/api/schedule";
+import { useGetAllEmployeesQuery } from "@/api/user";
+import { Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { toast } from "sonner"
-import { useQueryClient } from "@tanstack/react-query"
+} from "@/components/ui/select";
+import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface ScheduleDataTableProps {
-  dateRange: DateRange | undefined
+  dateRange: DateRange | undefined;
 }
 
 interface EmployeeRow {
-  id: string
-  email: string
-  fullName: string
-  position: string
-  avatar: string
+  id: string;
+  email: string;
+  fullName: string;
+  position: string;
+  avatar: string;
   schedules: {
-    [key: string]: { id: string; date: Date } | undefined
-  }
+    [key: string]: { id: string; date: Date } | undefined;
+  };
 }
 
 // Tailwind background colors for scheduled days
@@ -72,106 +72,130 @@ const colors = [
   "bg-purple-200",
   "bg-teal-200",
   "bg-orange-200",
-]
+];
 
-const getRandomColor = () => colors[Math.floor(Math.random() * colors.length)]
+const getRandomColor = () => colors[Math.floor(Math.random() * colors.length)];
 
 export function ScheduleDataTable({ dateRange }: ScheduleDataTableProps) {
   const {
     data: employees,
     isLoading: employeesLoading,
     error: employeesError,
-  } = useGetAllEmployeesQuery()
-  const assignSchedule = useAssignSingleScheduleMutation()
-  const queryClient = useQueryClient()
-  const [sorting, setSorting] = React.useState<SortingState>([])
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
-  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
-  const [rowSelection, setRowSelection] = React.useState({})
-  const [dialogOpen, setDialogOpen] = React.useState(false)
-  const [selectedEmployee, setSelectedEmployee] = React.useState<{ id: string; fullName: string } | null>(null)
-  const [selectedDate, setSelectedDate] = React.useState<Date | null>(null)
+  } = useGetAllEmployeesQuery();
+  const assignSchedule = useAssignSingleScheduleMutation();
+  const queryClient = useQueryClient();
+  const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
+    []
+  );
+  const [columnVisibility, setColumnVisibility] =
+    React.useState<VisibilityState>({});
+  const [rowSelection, setRowSelection] = React.useState({});
+  const [dialogOpen, setDialogOpen] = React.useState(false);
+  const [selectedEmployee, setSelectedEmployee] = React.useState<{
+    id: string;
+    fullName: string;
+  } | null>(null);
+  const [selectedDate, setSelectedDate] = React.useState<Date | null>(null);
 
   // Generate week dates for Monday to Friday based on dateRange
   const weekDates: { [key: string]: Date } = React.useMemo(() => {
-    const dates: { [key: string]: Date } = {}
-    const dayNames = ["monday", "tuesday", "wednesday", "thursday", "friday"]
+    const dates: { [key: string]: Date } = {};
+    const dayNames = ["monday", "tuesday", "wednesday", "thursday", "friday"];
     if (dateRange?.from) {
-      let currentDate = startOfDay(toZonedTime(dateRange.from, "Africa/Lagos"))
+      let currentDate = startOfDay(toZonedTime(dateRange.from, "Africa/Lagos"));
       // Adjust to start on Monday in WAT
       while (format(currentDate, "EEEE").toLowerCase() !== "monday") {
-        currentDate = new Date(currentDate.setDate(currentDate.getDate() - 1))
+        currentDate = new Date(currentDate.setDate(currentDate.getDate() - 1));
       }
       for (let i = 0; i < 5; i++) {
-        dates[dayNames[i]] = startOfDay(new Date(currentDate))
-        currentDate = new Date(currentDate.setDate(currentDate.getDate() + 1))
+        dates[dayNames[i]] = startOfDay(new Date(currentDate));
+        currentDate = new Date(currentDate.setDate(currentDate.getDate() + 1));
       }
     }
-    return dates
-  }, [dateRange])
+    return dates;
+  }, [dateRange]);
+
+  let user = null;
+  try {
+    const userData = localStorage.getItem("userData");
+    if (userData) {
+      user = JSON.parse(userData);
+    }
+  } catch (error) {
+    console.error("Failed to parse userData from localStorage:", error);
+    localStorage.removeItem("userData"); // Optional: Clear invalid data
+  }
 
   // Map schedules to employees
   const data: EmployeeRow[] = React.useMemo(() => {
-    if (!employees) return []
+    if (!employees) return [];
 
     interface ApiSchedule {
-      id: string
+      id: string;
       workday: {
-        date: string // ISO string
-      }
+        date: string; // ISO string
+      };
     }
 
     interface ApiEmployee {
-      id: string
-      email: string
-      fullName: string
-      role: string
-      position: string
-      schedules: ApiSchedule[]
+      id: string;
+      email: string;
+      fullName: string;
+      role: string;
+      position: string;
+      schedules: ApiSchedule[];
     }
 
-    return (employees as ApiEmployee[]).map((employee: ApiEmployee): EmployeeRow => {
-      const employeeSchedules: EmployeeRow["schedules"] = {
-        monday: undefined,
-        tuesday: undefined,
-        wednesday: undefined,
-        thursday: undefined,
-        friday: undefined,
-      }
+    return (employees as ApiEmployee[]).map(
+      (employee: ApiEmployee): EmployeeRow => {
+        const employeeSchedules: EmployeeRow["schedules"] = {
+          monday: undefined,
+          tuesday: undefined,
+          wednesday: undefined,
+          thursday: undefined,
+          friday: undefined,
+        };
 
-      // Map schedules based on workday.date
-      employee.schedules.forEach((schedule: ApiSchedule) => {
-        // Convert UTC workday.date to WAT
-        const scheduleDate: Date = startOfDay(
-          toZonedTime(new Date(schedule.workday.date), "Africa/Lagos")
-        )
+        // Map schedules based on workday.date
+        employee.schedules.forEach((schedule: ApiSchedule) => {
+          // Convert UTC workday.date to WAT
+          const scheduleDate: Date = startOfDay(
+            toZonedTime(new Date(schedule.workday.date), "Africa/Lagos")
+          );
 
-        // Filter by dateRange if provided
-        if (
-          !dateRange?.from ||
-          !dateRange?.to ||
-          (scheduleDate >= startOfDay(toZonedTime(dateRange.from, "Africa/Lagos")) &&
-            scheduleDate <= startOfDay(toZonedTime(dateRange.to, "Africa/Lagos")))
-        ) {
-          for (const day of Object.keys(weekDates)) {
-            if (weekDates[day] && isSameDay(scheduleDate, weekDates[day])) {
-              employeeSchedules[day] = { id: schedule.id, date: scheduleDate }
-              break
+          // Filter by dateRange if provided
+          if (
+            !dateRange?.from ||
+            !dateRange?.to ||
+            (scheduleDate >=
+              startOfDay(toZonedTime(dateRange.from, "Africa/Lagos")) &&
+              scheduleDate <=
+                startOfDay(toZonedTime(dateRange.to, "Africa/Lagos")))
+          ) {
+            for (const day of Object.keys(weekDates)) {
+              if (weekDates[day] && isSameDay(scheduleDate, weekDates[day])) {
+                employeeSchedules[day] = {
+                  id: schedule.id,
+                  date: scheduleDate,
+                };
+                break;
+              }
             }
           }
-        }
-      })
+        });
 
-      return {
-        id: employee.id,
-        email: employee.email,
-        fullName: employee.fullName,
-        position: employee.position, // Use role since position isn't in data
-        avatar: `https://i.pravatar.cc/150?u=${employee.email}`,
-        schedules: employeeSchedules,
+        return {
+          id: employee.id,
+          email: employee.email,
+          fullName: employee.fullName,
+          position: employee.position, // Use role since position isn't in data
+          avatar: `https://i.pravatar.cc/150?u=${employee.email}`,
+          schedules: employeeSchedules,
+        };
       }
-    })
-  }, [employees, dateRange, weekDates])
+    );
+  }, [employees, dateRange, weekDates]);
 
   const handleAssignSchedule = () => {
     if (selectedEmployee && selectedDate) {
@@ -183,22 +207,25 @@ export function ScheduleDataTable({ dateRange }: ScheduleDataTableProps) {
         {
           onSuccess: () => {
             toast.success("Schedule Assigned", {
-              description: `Assigned ${selectedEmployee.fullName} to ${format(selectedDate, "LLL dd, y")}.`,
-            })
-            queryClient.invalidateQueries({ queryKey: ["allEmployees"] })
-            setDialogOpen(false)
-            setSelectedEmployee(null)
-            setSelectedDate(null)
+              description: `Assigned ${selectedEmployee.fullName} to ${format(
+                selectedDate,
+                "LLL dd, y"
+              )}.`,
+            });
+            queryClient.invalidateQueries({ queryKey: ["allEmployees"] });
+            setDialogOpen(false);
+            setSelectedEmployee(null);
+            setSelectedDate(null);
           },
           onError: (error) => {
             toast.error("Error", {
               description: error.message,
-            })
+            });
           },
         }
-      )
+      );
     }
-  }
+  };
 
   const columns: ColumnDef<EmployeeRow>[] = [
     {
@@ -210,8 +237,12 @@ export function ScheduleDataTable({ dateRange }: ScheduleDataTableProps) {
           className="w-full p-3 border-0"
         />
       ),
-      cell: ({ row }: { row: import("@tanstack/react-table").Row<EmployeeRow> }) => {
-        const data = row.original
+      cell: ({
+        row,
+      }: {
+        row: import("@tanstack/react-table").Row<EmployeeRow>;
+      }) => {
+        const data = row.original;
         return (
           <div className="flex items-center gap-3">
             <Avatar>
@@ -220,19 +251,25 @@ export function ScheduleDataTable({ dateRange }: ScheduleDataTableProps) {
             </Avatar>
             <div>
               <div className="font-medium">{data.fullName}</div>
-              <div className="text-sm text-muted-foreground">{data.position}</div>
+              <div className="text-sm text-muted-foreground">
+                {data.position}
+              </div>
             </div>
           </div>
-        )
+        );
       },
     },
     ...["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"].map((day) => ({
       id: day.toLowerCase(),
       header: day,
-      cell: ({ row }: { row: import("@tanstack/react-table").Row<EmployeeRow> }) => {
-        const schedule = row.original.schedules[day.toLowerCase()]
-        const color = getRandomColor()
-        const weekDate = weekDates[day.toLowerCase()]
+      cell: ({
+        row,
+      }: {
+        row: import("@tanstack/react-table").Row<EmployeeRow>;
+      }) => {
+        const schedule = row.original.schedules[day.toLowerCase()];
+        const color = getRandomColor();
+        const weekDate = weekDates[day.toLowerCase()];
         return (
           <div className="flex justify-center w-full h-full">
             {schedule ? (
@@ -247,22 +284,34 @@ export function ScheduleDataTable({ dateRange }: ScheduleDataTableProps) {
                 className="w-6 h-6 flex items-center cursor-pointer justify-center rounded-sm border-2 hover:bg-gray-100"
                 onClick={() => {
                   if (weekDate) {
-                    setSelectedEmployee({ id: row.original.id, fullName: row.original.fullName })
-                    setSelectedDate(weekDate)
-                    setDialogOpen(true)
+                    setSelectedEmployee({
+                      id: row.original.id,
+                      fullName: row.original.fullName,
+                    });
+                    setSelectedDate(weekDate);
+                    setDialogOpen(true);
                   }
                 }}
-                disabled={!weekDate}
-                title={weekDate ? `Assign ${row.original.fullName} to ${format(weekDate, "LLL dd, y")}` : "No date available"}
+                disabled={
+                  !weekDate || user.role !== "ADMIN" || assignSchedule.isPending
+                }
+                title={
+                  weekDate
+                    ? `Assign ${row.original.fullName} to ${format(
+                        weekDate,
+                        "LLL dd, y"
+                      )}`
+                    : "No date available"
+                }
               >
                 <Plus />
               </button>
             )}
           </div>
-        )
+        );
       },
     })),
-  ]
+  ];
 
   const table = useReactTable({
     data,
@@ -287,14 +336,14 @@ export function ScheduleDataTable({ dateRange }: ScheduleDataTableProps) {
         pageSize: 10,
       },
     },
-  })
+  });
 
   if (employeesLoading) {
-    return <p className="text-[#395B64]">Loading employees...</p>
+    return <p className="text-[#395B64]">Loading employees...</p>;
   }
 
   if (employeesError) {
-    return <p className="text-red-500">Error: {employeesError.message}</p>
+    return <p className="text-red-500">Error: {employeesError.message}</p>;
   }
 
   return (
@@ -308,7 +357,10 @@ export function ScheduleDataTable({ dateRange }: ScheduleDataTableProps) {
                   <TableHead key={header.id} className="border p-4">
                     {header.isPlaceholder
                       ? null
-                      : flexRender(header.column.columnDef.header, header.getContext())}
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
                   </TableHead>
                 ))}
               </TableRow>
@@ -320,7 +372,10 @@ export function ScheduleDataTable({ dateRange }: ScheduleDataTableProps) {
                 <TableRow key={row.id}>
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id} className="border p-4">
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
                     </TableCell>
                   ))}
                 </TableRow>
@@ -338,7 +393,8 @@ export function ScheduleDataTable({ dateRange }: ScheduleDataTableProps) {
       {/* Pagination Controls */}
       <div className="flex items-center justify-between space-x-2 py-4">
         <div className="flex-1 text-sm text-muted-foreground">
-          Showing {table.getRowModel().rows.length} of {table.getRowCount()} employees
+          Showing {table.getRowModel().rows.length} of {table.getRowCount()}{" "}
+          employees
         </div>
         <div className="flex items-center space-x-2">
           <Button
@@ -350,7 +406,8 @@ export function ScheduleDataTable({ dateRange }: ScheduleDataTableProps) {
             Previous
           </Button>
           <span className="text-sm">
-            Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+            Page {table.getState().pagination.pageIndex + 1} of{" "}
+            {table.getPageCount()}
           </span>
           <Button
             variant="outline"
@@ -363,7 +420,7 @@ export function ScheduleDataTable({ dateRange }: ScheduleDataTableProps) {
           <Select
             value={table.getState().pagination.pageSize.toString()}
             onValueChange={(value) => {
-              table.setPageSize(Number(value))
+              table.setPageSize(Number(value));
             }}
           >
             <SelectTrigger className="w-[100px]">
@@ -386,7 +443,10 @@ export function ScheduleDataTable({ dateRange }: ScheduleDataTableProps) {
             <DialogTitle>Confirm Schedule Assignment</DialogTitle>
             <DialogDescription>
               Assign {selectedEmployee?.fullName} to the schedule on{" "}
-              {selectedDate ? format(selectedDate, "LLL dd, y") : "selected date"}?
+              {selectedDate
+                ? format(selectedDate, "LLL dd, y")
+                : "selected date"}
+              ?
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -409,5 +469,5 @@ export function ScheduleDataTable({ dateRange }: ScheduleDataTableProps) {
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }

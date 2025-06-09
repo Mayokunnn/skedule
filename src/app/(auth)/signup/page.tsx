@@ -17,6 +17,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 const VALID_DAYS = [
   "Monday",
@@ -40,6 +41,11 @@ const formSchema = z
     preferredDays: z
       .array(z.enum(VALID_DAYS))
       .length(2, { message: "Please select exactly 2 preferred days" }),
+    terms: z
+      .boolean()
+      .refine((val) => val === true, {
+        message: "You must agree to the terms",
+      }),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
@@ -56,6 +62,7 @@ export default function SignUp() {
       confirmPassword: "",
       position: "",
       preferredDays: [],
+      terms: false,
     },
   });
 
@@ -237,7 +244,7 @@ export default function SignUp() {
               render={({ field }) => (
                 <FormItem className="w-full max-w-sm">
                   <FormLabel className="text-white">
-                    Preferred Work Days (select exactly 3)
+                    Preferred Work Days (select exactly 2)
                   </FormLabel>
                   <div className="flex flex-wrap gap-4">
                     {VALID_DAYS.map((day) => (
@@ -267,6 +274,33 @@ export default function SignUp() {
               )}
             />
 
+            {/* Terms Checkbox */}
+            <FormField
+              control={form.control}
+              name="terms"
+              render={({ field }) => (
+                <FormItem className="w-full max-w-sm">
+                  <div className="flex items-center space-x-2">
+                    <FormControl>
+                      <Checkbox
+                        id="terms"
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        className="checked:bg-white"
+                      />
+                    </FormControl>
+                    <label
+                      htmlFor="terms"
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                      I agree to the Terms
+                    </label>
+                  </div>
+                  <FormMessage className="text-red-500 mt-1" />
+                </FormItem>
+              )}
+            />
+
             {/* Error Messages */}
             {(signupError || loginError) && (
               <p className="text-red-500 text-sm w-full max-w-sm">
@@ -274,26 +308,28 @@ export default function SignUp() {
               </p>
             )}
 
-            <div className="text-sm flex justify-between items-center w-full max-w-sm px-2">
-              <div className="flex items-center space-x-2">
-                <Checkbox id="terms" className="checked:bg-white" />
-                <label
-                  htmlFor="terms"
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  I agree to the Terms
-                </label>
-              </div>
-            </div>
-
             <Button
               type="submit"
               size="lg"
-              className="rounded-full h-12 bg-[#395B64] text-white w-full p-3 max-w-sm text-lg cursor-pointer hover:bg-[#2f4d56]"
+              className="rounded-full h-12 bg-[#395B64] text-white w-full p-3 max-w-sm text-lg cursor-pointer hover:bg-[#2f4d56] flex items-center justify-center gap-2"
               disabled={isSignupPending || isLoginPending}
             >
-              {isSignupPending || isLoginPending ? "Signing Up..." : "Sign Up"}
+              {isSignupPending || isLoginPending ? (
+                <>
+                  <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white"></div>
+                  Signing Up...
+                </>
+              ) : (
+                "Sign Up"
+              )}
             </Button>
+
+            <p className="text-sm text-gray-200 w-full max-w-sm text-center">
+              Already have an account?{" "}
+              <Link href="/signin" className="text-white hover:underline">
+                Sign In
+              </Link>
+            </p>
           </div>
         </form>
       </Form>

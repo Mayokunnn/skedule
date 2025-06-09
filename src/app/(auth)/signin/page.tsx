@@ -3,12 +3,10 @@
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { LockIcon, MailIcon } from "lucide-react";
-
 import {
   Form,
   FormControl,
@@ -18,6 +16,7 @@ import {
 } from "@/components/ui/form";
 import { useLoginMutation } from "@/api/auth";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }),
@@ -52,7 +51,7 @@ export default function SignIn() {
       {
         onSuccess: (loginData) => {
           console.log(loginData.message);
-          router.push("/dashboard"); 
+          router.push("/dashboard");
         },
         onError: (error) => {
           console.error(error.message);
@@ -145,10 +144,25 @@ export default function SignIn() {
             <Button
               type="submit"
               size="lg"
-              className="rounded-full h-12 bg-[#395B64] text-white w-full p-3 max-w-sm text-lg cursor-pointer hover:bg-[#2f4d56]"
+              className="rounded-full h-12 bg-[#395B64] text-white w-full p-3 max-w-sm text-lg cursor-pointer hover:bg-[#2f4d56] flex items-center justify-center gap-2"
+              disabled={isLoginPending}
             >
-              {isLoginPending ? "Signing In..." : "Sign In"}
+              {isLoginPending ? (
+                <>
+                  <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white"></div>
+                  Signing In...
+                </>
+              ) : (
+                "Sign In"
+              )}
             </Button>
+
+            <p className="text-sm text-gray-200 w-full max-w-sm text-center">
+              Don&apos;t have an account?{" "}
+              <Link href="/signup" className="text-white hover:underline">
+                Sign Up
+              </Link>
+            </p>
           </div>
         </form>
       </Form>
