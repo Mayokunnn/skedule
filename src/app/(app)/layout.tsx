@@ -9,7 +9,7 @@ export default function AppLayout({
     return (
         <SidebarProvider>
         <AppSidebar />
-        <main className="p-10 w-full">
+        <main className="p-1 md:p-10 w-full">
           {children}
         </main>
       </SidebarProvider>

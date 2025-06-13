@@ -279,7 +279,9 @@ export function ScheduleDataTable({ dateRange }: ScheduleDataTableProps) {
               >
                 Pay Edge
               </div>
-            ) : user.role !== "ADMIN" ? "" : (
+            ) : user.role !== "ADMIN" ? (
+              ""
+            ) : (
               <button
                 className="w-6 h-6 flex items-center cursor-pointer justify-center rounded-sm border-2 hover:bg-gray-100"
                 onClick={() => {
@@ -347,14 +349,14 @@ export function ScheduleDataTable({ dateRange }: ScheduleDataTableProps) {
   }
 
   return (
-    <div className="w-full">
-      <div className="rounded-md border">
+    <div className="w-full overflow-x-auto">
+      <div className="rounded-md border min-w-[600px]">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id} className="border p-4">
+                  <TableHead key={header.id} className="border p-2 md:p-4">
                     {header.isPlaceholder
                       ? null
                       : flexRender(
@@ -371,7 +373,7 @@ export function ScheduleDataTable({ dateRange }: ScheduleDataTableProps) {
               table.getRowModel().rows.map((row) => (
                 <TableRow key={row.id}>
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="border p-4">
+                    <TableCell key={cell.id} className="border p-2 md:p-4">
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()
