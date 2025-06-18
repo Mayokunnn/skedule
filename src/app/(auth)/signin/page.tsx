@@ -49,8 +49,7 @@ export default function SignIn() {
         password: values.password,
       },
       {
-        onSuccess: (loginData) => {
-          console.log(loginData.message);
+        onSuccess: () => {
           router.push("/dashboard");
         },
         onError: (error) => {

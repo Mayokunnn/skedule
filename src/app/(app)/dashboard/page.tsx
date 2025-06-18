@@ -111,7 +111,6 @@ export default function Dashboard() {
   const {
     data: comparisonData,
     isPending: comparisonLoading,
-    refetch: refetchComparison,
   } = useCompareSchedulesQuery(apiDateRange);
   const fairGreedyMutation = useGenerateFairGreedyScheduleMutation();
   const basicGreedyMutation = useGenerateBasicGreedyScheduleMutation();

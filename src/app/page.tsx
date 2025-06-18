@@ -17,7 +17,10 @@ export default function Home() {
           <li>Pricing</li>
           <li>Resources</li>
         </ul>
-        <Button className="text-[#395B64] text-lg bg-[#DDE3E5] px-3 py-2 hover:bg-[#c8c9c9] cursor-pointer hover:text-[#395B64] w-36 h-12">
+        <Button
+          onClick={() => router.push("/signin")}
+          className="text-[#395B64] text-lg bg-[#DDE3E5] px-3 py-2 hover:bg-[#c8c9c9] cursor-pointer hover:text-[#395B64] w-36 h-12"
+        >
           Login
         </Button>
       </div>

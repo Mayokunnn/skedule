@@ -63,7 +63,7 @@ export default function Schedule() {
         <CardHeader className="p-3 gap-0 border-b-1">
           <div className="flex flex-col md:flex-row justify-between items-center pt-3">
             <CardTitle className="text-xl mb-2 md:mb-0">Skeduler</CardTitle>
-            <CardDescription>Manage your team's schedule</CardDescription>
+            <CardDescription>Manage your team&apos;s schedule</CardDescription>
           </div>
         </CardHeader>
 

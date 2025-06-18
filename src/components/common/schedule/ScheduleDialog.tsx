@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -10,13 +11,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { ReactNode } from "react";
 import { useGenerateFairGreedyScheduleMutation } from "@/api/schedule";
 import { DateRange } from "react-day-picker";
 import { format } from "date-fns";
 
 interface ScheduleDialogProps {
-  children: ReactNode;
+  children: React.ReactNode;
   dateRange: DateRange | undefined;
   onConfirm?: () => void;
 }
@@ -26,6 +26,8 @@ export function ScheduleDialog({
   dateRange,
   onConfirm,
 }: ScheduleDialogProps) {
+  const [open, setOpen] = useState(false);
+
   const {
     mutate: generateSchedule,
     isPending,
@@ -36,6 +38,7 @@ export function ScheduleDialog({
     if (dateRange?.from && dateRange?.to) {
       const fromDate = format(dateRange.from, "yyyy-MM-dd");
       const toDate = format(dateRange.to, "yyyy-MM-dd");
+
       generateSchedule(
         {
           from: fromDate,
@@ -45,6 +48,7 @@ export function ScheduleDialog({
         {
           onSuccess: (data) => {
             console.log(data);
+            setOpen(false); // ✅ Close the dialog on success
             onConfirm?.();
           },
           onError: (error) => {
@@ -56,7 +60,7 @@ export function ScheduleDialog({
   };
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[425px] bg-white text-[#395B64]">
         <DialogHeader>
@@ -77,6 +81,7 @@ export function ScheduleDialog({
           <Button
             variant="outline"
             className="border-[#395B64] text-[#395B64] hover:bg-[#e0e7ea]"
+            onClick={() => setOpen(false)}
             disabled={isPending}
           >
             Cancel
