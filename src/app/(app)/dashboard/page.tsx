@@ -27,6 +27,14 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Loader2, RefreshCcw } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -116,6 +124,8 @@ export default function Dashboard() {
   const basicGreedyMutation = useGenerateBasicGreedyScheduleMutation();
   const roundRobinMutation = useGenerateRoundRobinScheduleMutation();
 
+  console.log(employees);
+
   // Compute schedule metrics
   const scheduleMetrics = React.useMemo(() => {
     if (!employees.length || !schedules.length || !apiDateRange) return null;
@@ -167,20 +177,6 @@ export default function Dashboard() {
   const fairnessMetrics = React.useMemo(() => {
     if (!comparisonData || !apiDateRange) return null;
     const fairGreedy = comparisonData.fairGreedy;
-    if (fairGreedy.outOfBounds.length) {
-      toast.warning("Fairness Issue", {
-        description: `Employees with fairness scores outside [-3, +3]: ${fairGreedy.outOfBounds.join(
-          ", "
-        )}`,
-      });
-    }
-    if (fairGreedy.invalidAssignments.length) {
-      toast.warning("Assignment Issue", {
-        description: `Employees with invalid assignments (not 2–3 days): ${fairGreedy.invalidAssignments.join(
-          ", "
-        )}`,
-      });
-    }
     return {
       averageScore: fairGreedy.averageScore,
       fairnessIndex: fairGreedy.fairnessIndex,
@@ -416,6 +412,34 @@ export default function Dashboard() {
                 Generate Round Robin Schedule
               </Button>
             </div>
+          </CardContent>
+        </Card>
+      </div>
+       {/* Fairness Table */}
+      <div className="mt-10">
+        <Card>
+          <CardHeader>
+            <CardTitle>Employee Fairness Scores</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead className="text-right">Fairness Score</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {employees.map((emp) => (
+                  <TableRow key={emp.id}>
+                    <TableCell>{emp.fullName}</TableCell>
+                    <TableCell className="text-right font-medium">
+                      {emp.fairnessScore ?? "-"}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </CardContent>
         </Card>
       </div>
